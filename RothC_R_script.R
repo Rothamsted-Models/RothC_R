@@ -100,7 +100,7 @@ RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbar
     
   } else if(opt_RMmoist %in% c(2,3)){
     
-    RMFMin <- min_RMMoist
+    RMFMin <- min_RMmoist
     
     mbars <- c(0, 50, 1000, 15000, 1000000)
     
@@ -133,7 +133,7 @@ RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbar
     
     
     # ksat (saturated hydraulic conductivity), l_star and l are calculated in Wosten and van Genuchten but not needed to calculated the soil properties for RothC 
-    # The calculations have been left in the code in case you wish to use them, but commented out
+    # The calculations have been left in the code in case required, but commented out
     #
     #      ksat=EXP(7.755 +0.0352*siltper +0.93*t -0.967*BD**2 
     #     &     -0.000484*clayper**2 -0.000322*siltper**2
@@ -150,7 +150,7 @@ RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbar
     wc <- list()
     
     for(i in 1:5){
-      wc[[i]] <- thetaR + (thetaS-thetaR)/ (1+(alpha*mbars(i))**n)**m
+      wc[[i]] <- thetaR + (thetaS-thetaR)/ (1+(alpha*mbars[i])^n)^m
     }
     
     wcSAT <- wc[[1]]
@@ -189,12 +189,12 @@ RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbar
   DF <- RAIN - 0.75*PEVAP # 0.75 is used as a pan coefficient to convert open-pan evaporation to potential evapotranspiration
   
   minSMDDF <- min(0.0, SMD+DF)
-  minSMDBareSMD <- min(SMDBare, SMD)
+  minSMDbareSMD <- min(SMDbare, SMD)
   
   if(PC == 1){
     SMD1 <- max(SMDMaxAdj, minSMDDF)
   } else {
-    SMD1 <- max(minSMDBareSMD,minSMDDF)
+    SMD1 <- max(minSMDbareSMD,minSMDDF)
   }
   
   SMD <<- SMD1 # global assign required here for expected behaviour of the model.
@@ -253,11 +253,12 @@ SMD <- 0.0
 TOC1 <- 0.0
 
 # read in RothC input data file 
-setwd("B:/Github_RothC_development/RothC_R/")
+setwd("B:/Github_RothC_development/RothC_R_git/")
 df_opts <- read.csv('RothC_input.dat',skip = 3, header = 1, nrows = 1, sep = '')
 opt_RMmoist <- df_opts[[1,'opt_RMmoist']]
 opt_SMDbare <- df_opts[[1,'opt_SMDbare']]
 df_head <- read.csv('RothC_input.dat', skip = 6, header = 1, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
+colnames(df_head) <- c('clay','depth','iom','nsteps','silt','BD','OC','min_RMmoist')
 clay <- df_head[[1,'clay']]
 depth <- df_head[[1,'depth']]
 IOM <- df_head[[1,'iom']]
@@ -310,7 +311,6 @@ while(test > 0.000001){
   } else if(opt_RMmoist %in% c(2,3)){
     RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, silt, OC, BulkD, min_RMmoist)
   }
-  RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD)
   RM_PC <- RMF_PC(PC)
   
   # combine RMFs into one.
