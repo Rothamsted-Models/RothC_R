@@ -11,10 +11,9 @@ The first version of RothC created by David Jenkinson and James Rayner in 1977 (
 In 1987 an updated version was published, see Jenkinson et al. (1987).  This version included the prediction of the radiocarbon age of the soil, the pools POM (physically stabilized organic matter) and COM (chemically stabilized organic matter) were replaced with Hum (humified organic matter) and IOM (inert organic matter), and the microbial biomass pool was split into BioA (autochthonous biomass) and BioZ (zymogenous biomass).  
 
 **In 1990, the two biomass pools were combined into a single pool (Jenkinson, 1990) this version is the standard version of the model, that this code refers to.**
+**Farina et al. (2013) modified the soil water dynamics for semi-arid regions, this has been incorporated into version 2.0.0 (retaining the functionality of version 1.0.0)**
 
 Other published developments of the model include:
-
-Farina et al. (2013) modified the soil water dynamics for semi-arid regions.
 
 Giongo et al. (2020) created a daily version and modified the soil water dynamics, for Caatinga shrublands, in the semiarid region, North-East Brazil.
 
@@ -38,10 +37,17 @@ This file contains the simple code to load the function to your R environment an
 
 
 ### RothC_input.dat  
-This file contains input variables for the model.  
+This file contains input variables for the model.
 
-At the start of the file values for **clay** (%), **soil depth** (cm), **inert organic matter** (IOM, t C ha<sup>-1</sup>) and **number of steps** (nsteps) are recorded.  
-Following that there is a table which records monthly data on **year**, **month**, **percentage of modern carbon**  (%), **mean air temperature** (Temp, °C), **total monthly rainfall** (Rain, mm), **total monthly open-pan evaporation** (Evap, mm), **all carbon input entering the soil (from plants, roots, root exudates)** (Pl_inp, t C ha<sup>-1</sup>), **carbon input from organic amendment** (OA_inp, t C ha<sup>-1</sup>), **plant cover** (PC, 0 for no plants e.g. bare or post-harvest, 1 for plants e.g. crop or grass), and the **DPM/RPM ratio** (DPM_RPM) of the carbon inputs from plants.
+Value for the **opt_RMmoist** option can be 1, 2, or 3
+Value for the **opt_SMDbare** option can be 1 or 2
+
+Then values for **clay** (%), **soil depth** (cm), **inert organic matter** (IOM, t C ha<sup>-1</sup>),  **number of steps** (nsteps),  **silt** (%), **bulk density** (BD, g cm<sup>-3</sup>), **organic carbon** (OC, %), and **minRM_Moist** which is the minimum value to be used for the rate-modifying for soil moisture (default = 0.2) are recorded.  
+
+The **last four variables** are only read in when **opt_RMmoist is 2 or 3**.
+
+Following that there is a table which records monthly data on **year**, **month**, **percentage of modern carbon**  (%), **mean air temperature** (Tmp, °C), **total monthly rainfall** (Rain, mm), **total monthly open-pan evaporation** (Evap, mm), **all carbon input entering the soil** (from plants, roots, root exudates) (Pl_inp, t C ha<sup>-1</sup>), **carbon input from organic amendment** (OA_inp, t C ha<sup>-1</sup>), **plant cover** (PC, 0 for no plants e.g. bare or post-harvest, 1 for plants e.g. crop or grass), and the **DPM/RPM ratio** (DPM_RPM) of the carbon inputs from plants.
+
 
 ### year_results.out
 This file contains the yearly values of the SOC (both the pools and Total) and the delta 14-carbon.
@@ -93,7 +99,7 @@ The code as written uses an identical input file structure to the other language
 
 **Example of how to run the model**  
 The file RothC_input.dat contains all the input data needed to run the model. The month results (month_results.out) and year results (year_results.out) files correspond to this input file as an example. 
-The model is normally run to equilibrium using average temperature, rainfall, open pan evaporation, an average carbon input to the soil, the equilibrium run is to initialise the soil carbon pools. Once the soil carbon pools have been initialised, the model is run for the period of interest. The met data (temperature, rainfall and evaporation) can be average or actual weather data. The carbon input to the soil can be: 1) adjusted so the modelled output matches the measured data, or 2) can be estimated from yield or biomass data (Bolinder et al., 2007), or NPP data.  
+The model is normally run to equilibrium using average temperature, rainfall, open pan evaporation, and an average carbon input to the soil. The equilibrium run is to initialise the soil carbon pools. Once the soil carbon pools have been initialised, the model is run for the period of interest. The met data (temperature, rainfall and evaporation) can be average or actual weather data. The carbon input to the soil can be: 1) adjusted so the modelled output matches the measured data, or 2) can be estimated from yield or biomass data (Bolinder et al., 2007), or NPP data.  
 
 As mentioned in the file descriptions, the code has been provided as a standalone script and as a function script taking the filepath of the input file as an argument. 
 
