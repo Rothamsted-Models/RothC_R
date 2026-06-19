@@ -1,4 +1,4 @@
-# RothC R version 1.0.0
+# RothC R version 2.0.0
 # 
 # Authors: Jonah Prout, Alice Milne, and Kevin Coleman
 #
@@ -134,17 +134,17 @@ RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbar
     # ksat (saturated hydraulic conductivity), l_star and l are calculated in Wosten and van Genuchten but not needed to calculated the soil properties for RothC 
     # The calculations have been left in the code in case required, but commented out
     #
-    #      ksat=EXP(7.755 +0.0352*siltper +0.93*t -0.967*BD**2 
-    #     &     -0.000484*clayper**2 -0.000322*siltper**2
-    #     &     +0.001*siltper**-1 -0.0748*(OC*1.72)**-1
-    #     &     -0.643*log(siltper) -0.01398*BD*clayper -0.1673*BD*(OC*1.72)
-    #     &     +0.02986*clayper*t -0.03305*siltper*t)
+    #      ksat=exp(7.755 +0.0352*silt +0.93*t -0.967*BD^2 
+    #          -0.000484*clay^2 -0.000322*silt^2
+    #          +0.001*silt^-1 -0.0748*(OC*1.72)^-1
+    #          -0.643*log(silt) -0.01398*BD*clay -0.1673*BD*(OC*1.72)
+    #          +0.02986*clay*t -0.03305*silt*t)
     #     
-    #      l_star=(0.0202 +0.0006193*clayper**2 -0.001136*(OC*1.72)**2
-    #     &     -0.2316*log(OC*1.72) -0.03544*BD*clayper +0.00283*BD*siltper
-    #     &     +0.0488*BD*OC*1.72)
+    #      l_star=(0.0202 +0.0006193*clay^2 -0.001136*(OC*1.72)^2
+    #          -0.2316*log(OC*1.72) -0.03544*BD*clay +0.00283*BD*silt
+    #          +0.0488*BD*OC*1.72)
     #     
-    #      l=10*(EXP(l_star)-1)/(EXP(l_star)+1)
+    #      l=10*(exp(l_star)-1)/(exp(l_star)+1)
     
     wc <- list()
     
@@ -252,7 +252,7 @@ SMD <- 0.0
 TOC1 <- 0.0
 
 # read in RothC input data file 
-setwd("B:/Github_RothC_development/RothC_R_git/")
+# setwd()
 df_opts <- read.csv('RothC_input.dat',skip = 3, header = 1, nrows = 1, sep = '')
 opt_RMmoist <- df_opts[[1,'opt_RMmoist']]
 opt_SMDbare <- df_opts[[1,'opt_SMDbare']]
