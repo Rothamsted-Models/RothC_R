@@ -1,4 +1,4 @@
-# RothC R version 1.0.0
+# RothC R version 2.0.0
 # 
 # Authors: Jonah Prout, Alice Milne, and Kevin Coleman
 #
@@ -6,23 +6,37 @@
 #
 # The Rothamsted Carbon Model: RothC
 # Developed by David Jenkinson and Kevin Coleman
-#
-# The code is the same as RothC_R_v1.0.0_script.R but wrapped in a function accepting filename as an argument.
-# This expects the provided file to be the same structure as the example file.
-# This code is sourced into the RothC_R_v1.0.0_using_function.R example script
-#
+# 
 # An example input file is provided with the release (RothC_input.dat).
 # The example file structure is a way to present the necessary inputs collectively and consistently.
 # Users can adapt the code to source the inputs from the R environment or use input files of the same structure.
 #
-# The structure of the input file matches with the corresponding version in our other releases (Fortran and Python).
+# The structure of the input file matches the corresponding version in our other releases (Fortran and Python).
 #
 # INPUTS:
+# 
+# option switches (see Description PDF for more detail)
+# 
+# opt_RMmoist: 1 = classic RothC moisture function using clay (%) down to matric potential -1500 kPa
+#              2 = moisture function calculated using additional variables down to matric potential -100 000 kPa
+#              3 = moisture function calculated using additional variables down to -1500 kPa
+# opt_SMDbare: 1 = bare soil moisture deficit threshold set as in classic RothC
+#              2 = bare soil moisture deficit threshold set to -1500 kPa
+# 
+# Soil variables required for all opt_RMmoist
 # 
 # clay:     clay content of the soil (units: %)
 # depth:    depth of topsoil (units: cm)
 # IOM:      inert organic matter (t C /ha)
 # nsteps:   number of timesteps
+# 
+# Soil variables only required for opt_RMmoist = 2 or 3
+#
+# silt: silt content of the soil (units:%)
+# BD: bulk density (units: g cm^-3)
+# OC: soil organic carbon concentration (units: %)
+# min_RMmoist: minimum value to give to the rate modifying factor for moisture (0.2 in classic RothC)
+# 
 # year:     year
 # month:    month (1-12)
 # modern:   %modern
@@ -52,10 +66,9 @@
 # Total_Rage: radiocarbon age of SOC (or TOC)
 # 
 # SMD:       soil moisture deficit (mm per soil depth)
-# RM_Tmp:    rate modifying factor for temperature (0.0 - ~5.0)
+# RM_Temp:   rate modifying factor for temperature (0.0 - ~5.0)
 # RM_Moist:  rate modifying factor for moisture (0.0 - 1.0)
 # RM_PC:     rate modifying factor for plant retainment (0.6 or 1.0)
-
 
 ###############################################################################
 
@@ -71,33 +84,138 @@ RothC_model <- function(filename){
   }
   
   # Calculates the rate modifying factor for moisture (RMF_Moist)
-  RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD){
+  # setting the additional variables for opt_RMmoist %in% c(2,3) to NULL
+  # if opt_RMmoist is 2 or 3, code will expect values for the NULL arguments
+  RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, 
+                        silt = NULL, OC = NULL, BulkD = NULL, min_RMmoist = NULL){
     RMFMax <- 1.0
-    RMFMin <- 0.2
+    if(opt_RMmoist == 1){
+      
+      RMFMin <- 0.2
+      
+      # Calc soil water functions properties
+      SMD15bar <- -(20+1.3*clay-0.01*(clay*clay))
+      SMD15barAdj <- SMD15bar*depth/23.0
+      SMD1bar <- 0.444*SMD15barAdj
+      
+    } else if(opt_RMmoist %in% c(2,3)){
+      
+      RMFMin <- min_RMmoist
+      
+      mbars <- c(0, 50, 1000, 15000, 1000000)
+      
+      t <- 1 # note t = topsoil, in Wosten et al 1999, topsoil and subsoil have values 1 or 0
+      # RothC only models topsoils so t is always 1
+      
+      alpha <- exp(-14.96+0.03135*clay+0.0351*silt+0.646*(OC*1.72)
+                   +15.29*BD-0.192*t-4.671*BD^2-0.000781*clay^2
+                   -0.00687*(OC*1.72)^2
+                   +0.0449*(OC*1.72)^-1+0.0663*log(silt)
+                   +0.1482*log(OC*1.72)
+                   -0.04546*BD*silt-0.4852*BD*(OC*1.72)+0.00673*clay*t)
+      
+      thetaS <- (0.7919+0.001691*clay-0.29619*BD-0.000001491*silt^2
+                 +0.0000821*(OC*1.72)^2+0.02427*clay^-1
+                 +0.01113*silt^-1+0.01472*log(silt)
+                 -0.0000733*(OC*1.72)*clay-0.000619*BD*clay
+                 -0.001183*BD*(OC*1.72)-0.0001664*silt*t)
+      
+      n <- exp(-25.23 -0.02195*clay +0.0074*silt -0.194*(OC*1.72)
+               +45.5*BD-7.24*BD^2 +0.0003658*clay^2
+               +0.002885*(OC*1.72)^2 -12.81*BD^-1 -0.1524*silt^-1
+               -0.01958*(OC*1.72)^-1 -0.2876*log(silt)
+               -0.0709*log(OC*1.72) -44.6*log(BD) -0.02264*BD*clay
+               +0.0896*BD*(OC*1.72) +0.00718*clay*t)+1
+      
+      thetaR <- 0.01
+      
+      m <- 1-1/n
+      
+      # ksat (saturated hydraulic conductivity), l_star and l are calculated in Wosten and van Genuchten but not needed to calculated the soil properties for RothC 
+      # The calculations have been left in the code in case required, but commented out
+      #
+      #      ksat=exp(7.755 +0.0352*silt +0.93*t -0.967*BD^2 
+      #          -0.000484*clay^2 -0.000322*silt^2
+      #          +0.001*silt^-1 -0.0748*(OC*1.72)^-1
+      #          -0.643*log(silt) -0.01398*BD*clay -0.1673*BD*(OC*1.72)
+      #          +0.02986*clay*t -0.03305*silt*t)
+      #     
+      #      l_star=(0.0202 +0.0006193*clay^2 -0.001136*(OC*1.72)^2
+      #          -0.2316*log(OC*1.72) -0.03544*BD*clay +0.00283*BD*silt
+      #          +0.0488*BD*OC*1.72)
+      #     
+      #      l=10*(exp(l_star)-1)/(exp(l_star)+1)
+      
+      wc <- list()
+      
+      for(i in 1:5){
+        wc[[i]] <- thetaR + (thetaS-thetaR)/ (1+(alpha*mbars[i])^n)^m
+      }
+      
+      wcSAT <- wc[[1]]
+      wcFC <- wc[[2]]
+      wc1 <- wc[[3]]
+      wcWP <- wc[[4]]
+      wc1000 <- wc[[5]]
+      
+      X0 <- (wcSAT - wcFC)*10*depth
+      X1 <- (wc1 - wcFC)*10*depth
+      X2 <- (wcWP - wcFC)*10*depth
+      X3 <- (wc1000 - wcFC)*10*depth
+      
+      SMD15bar <- X2 # X2 has been adjusted for depth
+      SMD15barAdj <- SMD15bar
+      SMD1bar <- X1
+      SMD1000bar <- X3
+    }
     
-    # Calc soil water functions properties
-    SMDMax <- -(20+1.3*clay-0.01*(clay*clay))
-    SMDMaxAdj <- SMDMax*depth/23.0
-    SMD1bar <- 0.444*SMDMaxAdj
-    SMDBare <- 0.556*SMDMaxAdj
+    if(opt_SMDbare == 1){
+      if(opt_RMmoist == 1){
+        SMDbare <- 0.556 * SMD15barAdj
+      } else {
+        SMDbare <- SMD15barAdj - (0.6388/0.8) * (SMD15barAdj - SMD1bar)
+      }
+    } else {
+      SMDbare <- SMD15barAdj
+    }
+    
+    if(opt_RMmoist %in% c(1, 3)){
+      SMDMaxAdj <- SMD15barAdj
+    } else if(opt_RMmoist == 2){
+      SMDMaxAdj <- SMD1000bar
+    }
     
     DF <- RAIN - 0.75*PEVAP # 0.75 is used as a pan coefficient to convert open-pan evaporation to potential evapotranspiration
     
     minSMDDF <- min(0.0, SMD+DF)
-    minSMDBareSMD <- min(SMDBare, SMD)
+    minSMDbareSMD <- min(SMDbare, SMD)
     
     if(PC == 1){
       SMD1 <- max(SMDMaxAdj, minSMDDF)
     } else {
-      SMD1 <- max(minSMDBareSMD,minSMDDF)
+      SMD1 <- max(minSMDbareSMD,minSMDDF)
     }
     
     SMD <<- SMD1 # global assign required here for expected behaviour of the model.
     
-    if(SMD1 > SMD1bar){
-      RM_Moist <- 1.0
+    if(opt_RMmoist %in% c(1,3)){
+      
+      if(SMD1 > SMD1bar){
+        RM_Moist <- 1.0
+      } else {
+        RM_Moist <- (RMFMin + (RMFMax - RMFMin) * (SMD15barAdj - SMD1) / (SMD15barAdj - SMD1bar))
+      }
+      
     } else {
-      RM_Moist <- (RMFMin + (RMFMax - RMFMin) * (SMDMaxAdj - SMD1) / (SMDMaxAdj - SMD1bar))
+      
+      if(SMD1 > SMD1bar){
+        RM_Moist <- 1.0
+      } else if(SMD1 >  SMD15barAdj) {
+        RM_Moist <- (RMFMin + (RMFMax - RMFMin) * (SMD15barAdj - SMD1) / (SMD15barAdj - SMD1bar))
+      } else {
+        RM_Moist <- min_RMmoist
+      }
+      
     }
     
   }
@@ -134,12 +252,22 @@ RothC_model <- function(filename){
   TOC1 <- 0.0
   
   # read in RothC input data file 
-  df_head <- read.csv(filename, skip = 3, header = 1, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
+  df_opts <- read.csv(filename,skip = 3, header = 1, nrows = 1, sep = '')
+  opt_RMmoist <- df_opts[[1,'opt_RMmoist']]
+  opt_SMDbare <- df_opts[[1,'opt_SMDbare']]
+  df_head <- read.csv(filename, skip = 6, header = 1, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
+  colnames(df_head) <- c('clay','depth','iom','nsteps','silt','BD','OC','min_RMmoist')
   clay <- df_head[[1,'clay']]
   depth <- df_head[[1,'depth']]
   IOM <- df_head[[1,'iom']]
   nsteps <- df_head[[1,'nsteps']]
-  df <- read.csv(filename, skip = 6, header = 1, sep = '')# sep = '' can be removed if file is comma delimited
+  if(opt_RMmoist %in% c(2,3)){
+    silt <- df_head[[1,'silt']]
+    OC <- df_head[[1,'OC']]
+    BD <- df_head[[1,'BD']]
+    min_RMmoist <- df_head[[1,'min_RMmoist']]
+  }
+  df <- read.csv(filename, skip = 9, header = 1, sep = '')# sep = '' can be removed if file is comma delimited
   colnames(df) <- c('t_year', 't_month', 't_mod', 't_temp','t_rain','t_evap', 't_Pl_inp', 't_OA_inp', 't_PC', 't_DPM_RPM')
   
   # run RothC to equilibrium using first 12 months of input file df (spin-up)
@@ -176,7 +304,11 @@ RothC_model <- function(filename){
     
     # calculate RMFs for temperature, moisture, and plant cover
     RM_Temp <- RMF_Temp(TEMP)
-    RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD)
+    if(opt_RMmoist == 1){
+      RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare)
+    } else if(opt_RMmoist %in% c(2,3)){
+      RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, silt, OC, BulkD, min_RMmoist)
+    }
     RM_PC <- RMF_PC(PC)
     
     # combine RMFs into one.
@@ -351,7 +483,11 @@ RothC_model <- function(filename){
     
     # Calculate RMFs
     RM_Temp <- RMF_Temp(TEMP)
-    RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD)
+    if(opt_RMmoist == 1){
+      RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare)
+    } else if(opt_RMmoist %in% c(2,3)){
+      RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, silt, OC, BulkD, min_RMmoist)
+    }
     RM_PC <- RMF_PC(PC)
     
     # Combine RMFs into one.
