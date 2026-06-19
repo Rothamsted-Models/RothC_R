@@ -131,7 +131,6 @@ RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbar
     
     m <- 1-1/n
     
-    
     # ksat (saturated hydraulic conductivity), l_star and l are calculated in Wosten and van Genuchten but not needed to calculated the soil properties for RothC 
     # The calculations have been left in the code in case required, but commented out
     #
@@ -172,7 +171,7 @@ RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbar
   
   if(opt_SMDbare == 1){
     if(opt_RMmoist == 1){
-      SMDbare <- 0.556 * SMD15bar
+      SMDbare <- 0.556 * SMD15barAdj
     } else {
       SMDbare <- SMD15barAdj - (0.6388/0.8) * (SMD15barAdj - SMD1bar)
     }
