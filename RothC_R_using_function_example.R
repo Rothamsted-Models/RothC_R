@@ -1,14 +1,7 @@
 # For this to function as written, you may need to set the working directory 
 # to the folder containing the downloaded files.
 
-# The code will function if you set an explicit filepath for filename;
-# however without setting a working directory, the results csv files may appear 
-# where this script is located or in the current working directory.
-
-# In practice, the results can be captured to the environment instead of or in addition to the csv files.
-
-
-setwd("B:/Github_RothC_development/RothC_R_git/")
+# setwd()
 
 source("RothC_R_function.R")
 
