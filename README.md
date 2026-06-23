@@ -11,6 +11,7 @@ The first version of RothC created by David Jenkinson and James Rayner in 1977 (
 In 1987 an updated version was published, see Jenkinson et al. (1987).  This version included the prediction of the radiocarbon age of the soil, the pools POM (physically stabilized organic matter) and COM (chemically stabilized organic matter) were replaced with Hum (humified organic matter) and IOM (inert organic matter), and the microbial biomass pool was split into BioA (autochthonous biomass) and BioZ (zymogenous biomass).  
 
 **In 1990, the two biomass pools were combined into a single pool (Jenkinson, 1990) this version is the classic version of the model (version 1.0.0).**
+
 **Farina et al. (2013) modified the soil water dynamics for semi-arid regions, this has been incorporated into version 2.0.0 (retaining the functionality of version 1.0.0)**
 
 Other published developments of the model include:
