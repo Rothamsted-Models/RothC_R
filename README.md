@@ -10,17 +10,17 @@ The first version of RothC created by David Jenkinson and James Rayner in 1977 (
 
 In 1987 an updated version was published, see Jenkinson et al. (1987).  This version included the prediction of the radiocarbon age of the soil, the pools POM (physically stabilized organic matter) and COM (chemically stabilized organic matter) were replaced with Hum (humified organic matter) and IOM (inert organic matter), and the microbial biomass pool was split into BioA (autochthonous biomass) and BioZ (zymogenous biomass).  
 
-**In 1990, the two biomass pools were combined into a single pool (Jenkinson, 1990) this version is the standard version of the model, that this code refers to.**
+**In 1990, the two biomass pools were combined into a single pool (Jenkinson, 1990) this version is the classic version of the model (version 1.0.0).**
 **Farina et al. (2013) modified the soil water dynamics for semi-arid regions, this has been incorporated into version 2.0.0 (retaining the functionality of version 1.0.0)**
 
 Other published developments of the model include:
 
-Giongo et al. (2020) created a daily version and modified the soil water dynamics, for Caatinga shrublands, in the semiarid region, North-East Brazil.
+Giongo et al. (2020) created a daily version, for Caatinga shrublands, in the semiarid region, North-East Brazil.
 
  
 ## Description of files included
 
-### RothC_description.docx
+### RothC_description.pdf
 This file contains the description of the model.
 
 
@@ -30,7 +30,7 @@ Note: the global assign (<<-) used for SMD within the RMF_Moist() function is re
 Users with experience in R can remap the inputs to environment variables and objects if more convenient. We have not provided code for this due to the many ways individuals can organise their data.
 
 ### RothC_function.R
-This file contains the RothC code wrapped in a function with the argument “file” used to supply the filepath of the input file. This is a minimal change but is to provide users with less experience a ready-made function (RothC_model). Those with more experience can enhance this function, and the code, linking directly to environment objects and variables. 
+This file contains the RothC code wrapped in a function with the argument “filename” used to supply the filepath of the input file. This is a minimal change but is to provide users with less experience a ready-made function (RothC_model). Those with more experience can enhance this function, and the code, linking directly to environment objects and variables. 
 
 ### Using_RothC_function.R
 This file contains the simple code to load the function to your R environment and run the model with the example file. If the example file is not in the same working directory, the corresponding filepath would need to be provided as part of the filename string (i.e. “filepath/RothC_input.dat”).
@@ -41,10 +41,12 @@ This file contains input variables for the model.
 
 Value for the **opt_RMmoist** option can be 1, 2, or 3
 Value for the **opt_SMDbare** option can be 1 or 2
+*see RothC_description_v2-0-0 section 1.6.2.2 for explanation of these options*
 
-Then values for **clay** (%), **soil depth** (cm), **inert organic matter** (IOM, t C ha<sup>-1</sup>),  **number of steps** (nsteps),  **silt** (%), **bulk density** (BD, g cm<sup>-3</sup>), **organic carbon** (OC, %), and **minRM_Moist** which is the minimum value to be used for the rate-modifying for soil moisture (default = 0.2) are recorded.  
+Then values for **clay** (%), **soil depth** (cm), **inert organic matter** (IOM, t C ha<sup>-1</sup>),  **number of steps** (nsteps),  **silt** (%), **bulk density** (BD, g cm<sup>-3</sup>), **organic carbon** (OC, %), and **minRM_Moist** which is the minimum value to be used for the rate-modifying for soil moisture are recorded.  
 
 The **last four variables** are only read in when **opt_RMmoist is 2 or 3**.
+If **opt_RMmoist is 1** the value of **minRM_Moist** is taken as 0.2.
 
 Following that there is a table which records monthly data on **year**, **month**, **percentage of modern carbon**  (%), **mean air temperature** (Tmp, °C), **total monthly rainfall** (Rain, mm), **total monthly open-pan evaporation** (Evap, mm), **all carbon input entering the soil** (from plants, roots, root exudates) (Pl_inp, t C ha<sup>-1</sup>), **carbon input from organic amendment** (OA_inp, t C ha<sup>-1</sup>), **plant cover** (PC, 0 for no plants e.g. bare or post-harvest, 1 for plants e.g. crop or grass), and the **DPM/RPM ratio** (DPM_RPM) of the carbon inputs from plants.
 
@@ -57,8 +59,8 @@ The columns are:
 **Month** 	- Always December for the yearly output  
 **DPM_t_C_ha** 	- Decomposable plant material (t C ha<sup>-1</sup>)  
 **RPM_t_C_ha** 	- Resistant plant material (t C ha<sup>-1</sup>)  
-**BIO_t_C_ha** 	- Microbial biomass (t C ha<sup>-1</sup>)  
-**HUM_t_C_ha**	    - Humified organic matter (t C ha<sup>-1</sup>)  
+**Bio_t_C_ha** 	- Microbial biomass (t C ha<sup>-1</sup>)  
+**Hum_t_C_ha**	    - Humified organic matter (t C ha<sup>-1</sup>)  
 **IOM_t_C_ha** 	- Inert organic matter (t C ha<sup>-1</sup>)  
 **SOC_t_C_ha**	    - Total soil organic carbon (t C ha<sup>-1</sup>)
 **CO2_t_C_ha**     - Accumulated carbon dioxide (t C ha<sup>-1</sup>)
@@ -86,15 +88,15 @@ This file contains the monthly inputs, rate modifying factors, SOC pools.
 **RM_PC**			- rate modifying factor for crop cover  
 **DPM_t_C_ha**		- Decomposable plant material (t C ha<sup>-1</sup>)  
 **RPM_t_C_ha**		- Resistant plant material (t C ha<sup>-1</sup>)  
-**BIO_t_C_ha**		- Microbial biomass (t C ha<sup>-1</sup>)  
-**HUM_t_C_ha**		- Humified organic matter (t C ha<sup>-1</sup>)  
+**Bio_t_C_ha**		- Microbial biomass (t C ha<sup>-1</sup>)  
+**Hum_t_C_ha**		- Humified organic matter (t C ha<sup>-1</sup>)  
 **IOM_t_C_ha**		- Inert organic matter (t C ha<sup>-1</sup>)  
 **SOC_t_C_ha**		- Total soil organic carbon (t C ha<sup>-1</sup>)  
 **CO2_t_C_ha**      - Accumulated carbon dioxide (t C ha<sup>-1</sup>)
 
 ## Requirements
 The code was written in R version 4.2.3. but only uses basic R functions, alongside those defined for the model.
-The code as written uses an identical input file structure to the other languages we have releases for RothC (Fortran and Python).
+The code as written uses an identical input file structure to the other languages we have releases of RothC for (Fortran and Python).
 
 
 **Example of how to run the model**  
