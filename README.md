@@ -42,14 +42,14 @@ This file contains input variables for the model.
 
 Value for the **opt_RMmoist** option can be 1, 2, or 3
 Value for the **opt_SMDbare** option can be 1 or 2
-*see RothC_description_v2-0-0 section 1.6.2.2 for explanation of these options*
+*see RothC_description section 1.6.2.2 for explanation of these options*
 
 Then values for **clay** (%), **soil depth** (cm), **inert organic matter** (IOM, t C ha<sup>-1</sup>),  **number of steps** (nsteps),  **silt** (%), **bulk density** (BD, g cm<sup>-3</sup>), **organic carbon** (OC, %), and **minRM_Moist** which is the minimum value to be used for the rate-modifying for soil moisture are recorded.  
 
 The **last four variables** are only read in when **opt_RMmoist is 2 or 3**.
 If **opt_RMmoist is 1** the value of **minRM_Moist** is taken as 0.2.
 
-Following that there is a table which records monthly data on **year**, **month**, **percentage of modern carbon**  (%), **mean air temperature** (Tmp, °C), **total monthly rainfall** (Rain, mm), **total monthly open-pan evaporation** (Evap, mm), **all carbon input entering the soil** (from plants, roots, root exudates) (Pl_inp, t C ha<sup>-1</sup>), **carbon input from organic amendment** (OA_inp, t C ha<sup>-1</sup>), **plant cover** (PC, 0 for no plants e.g. bare or post-harvest, 1 for plants e.g. crop or grass), and the **DPM/RPM ratio** (DPM_RPM) of the carbon inputs from plants.
+Following that there is a table which records monthly data on **year**, **month**, **percentage of modern carbon**  (%), **mean air temperature** (Tmp, °C), **total monthly rainfall** (Rain, mm), **total monthly open-pan evaporation** (Evap, mm), **all carbon input entering the soil from plants** (e.g. shoots, roots, root exudates) (Pl_inp, t C ha<sup>-1</sup>), **carbon input from organic amendment** (OA_inp, t C ha<sup>-1</sup>), **plant cover** (PC, 0 for no plants e.g. bare or post-harvest, 1 for plants e.g. crop or grass), and the **DPM/RPM ratio** (DPM_RPM) of the carbon inputs from plants.
 
 
 ### year_results.out
