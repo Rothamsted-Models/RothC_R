@@ -130,10 +130,10 @@ The following code is present in the Fortran code but is unused so for clarity o
 
          l=10*(exp(l_star)-1)/(exp(l_star)+1)
 
-**The calculation of 0 mbar, wcSAT and X0 are also unused so removed to here.**
-**0 mbar would be the first element of mbars vector and the for loop with i in 1:4 would be 1:5**
-**wcSAT and X0 lines would go at the top of their respective sets approx. line 139 and line 144**
-    wcSAT <- wc[[1]]
+**The calculation of 0 mbar, wcSAT and X0 are also unused so removed to here.** \
+**0 mbar would be the first element of mbars vector and the for loop with i in 1:4 would be 1:5** \
+**wcSAT and X0 lines would go at the top of their respective sets approx. line 139 and line 144** \
+    wcSAT <- wc[[1]] \
     X0 <- (wcSAT - wcFC)*10*depth
 
 	
