@@ -1,6 +1,6 @@
 # RothC R version 2.0.0
 # 
-# Authors: Jonah Prout, Alice Milne, and Kevin Coleman
+# Authors: Jonah Prout, Kevin Coleman, and Alice Milne
 #
 # Written in R version 4.2.3 (2023-03-15 ucrt)
 #
@@ -17,13 +17,13 @@
 # 
 # option switches (see Description PDF for more detail)
 # 
-# opt_RMmoist: 1 = classic RothC moisture function using clay (%) down to matric potential -1500 kPa
-#              2 = moisture function calculated using additional variables down to matric potential -100 000 kPa
-#              3 = moisture function calculated using additional variables down to -1500 kPa
+# opt_RMmoist: 1 = classic RothC moisture function using clay (%) from field capacity (matric potential -5 kPa) down to wilting point (matric potential -1500 kPa)
+#              2 = moisture function calculated using additional variables from field capacity (matric potential -5 kPa) down to capillary water (matric potential -100 000 kPa)
+#              3 = moisture function calculated using additional variables from field capacity (matric potential -5 kPa) down to wilting point (matric potential -1500 kPa)
 # opt_SMDbare: 1 = bare soil moisture deficit threshold set as in classic RothC
 #              2 = bare soil moisture deficit threshold set to -1500 kPa
 # 
-# Soil variables required for all opt_RMmoist
+# Soil variables required for all options of opt_RMmoist
 # 
 # clay:     clay content of the soil (units: %)
 # depth:    depth of topsoil (units: cm)
@@ -85,7 +85,7 @@ RMF_Temp <- function(TEMP){
 
 # Calculates the rate modifying factor for moisture (RMF_Moist)
 # setting the additional variables for opt_RMmoist %in% c(2,3) to NULL
-# if opt_RMmoist is 2 or 3, code will expect values for the NULL arguments
+# if opt_RMmoist is 2 or 3, code will expect values from the input file for the NULL arguments
 RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, 
                       silt = NULL, OC = NULL, BulkD = NULL, min_RMmoist = NULL){
   RMFMax <- 1.0
@@ -102,7 +102,7 @@ RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbar
     
     RMFMin <- min_RMmoist
     
-    mbars <- c(0, 50, 1000, 15000, 1000000)
+    mbars <- c(50, 1000, 15000, 1000000)
     
     t <- 1 # note t = topsoil, in Wosten et al 1999, topsoil and subsoil have values 1 or 0
     # RothC only models topsoils so t is always 1
@@ -131,34 +131,17 @@ RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbar
     
     m <- 1-1/n
     
-    # ksat (saturated hydraulic conductivity), l_star and l are calculated in Wosten and van Genuchten but not needed to calculated the soil properties for RothC 
-    # The calculations have been left in the code in case required, but commented out
-    #
-    #      ksat=exp(7.755 +0.0352*silt +0.93*t -0.967*BD^2 
-    #          -0.000484*clay^2 -0.000322*silt^2
-    #          +0.001*silt^-1 -0.0748*(OC*1.72)^-1
-    #          -0.643*log(silt) -0.01398*BD*clay -0.1673*BD*(OC*1.72)
-    #          +0.02986*clay*t -0.03305*silt*t)
-    #     
-    #      l_star=(0.0202 +0.0006193*clay^2 -0.001136*(OC*1.72)^2
-    #          -0.2316*log(OC*1.72) -0.03544*BD*clay +0.00283*BD*silt
-    #          +0.0488*BD*OC*1.72)
-    #     
-    #      l=10*(exp(l_star)-1)/(exp(l_star)+1)
-    
     wc <- list()
     
-    for(i in 1:5){
+    for(i in 1:4){
       wc[[i]] <- thetaR + (thetaS-thetaR)/ (1+(alpha*mbars[i])^n)^m
     }
     
-    wcSAT <- wc[[1]]
-    wcFC <- wc[[2]]
-    wc1 <- wc[[3]]
-    wcWP <- wc[[4]]
-    wc1000 <- wc[[5]]
+    wcFC <- wc[[1]]
+    wc1 <- wc[[2]]
+    wcWP <- wc[[3]]
+    wc1000 <- wc[[4]]
     
-    X0 <- (wcSAT - wcFC)*10*depth
     X1 <- (wc1 - wcFC)*10*depth
     X2 <- (wcWP - wcFC)*10*depth
     X3 <- (wc1000 - wcFC)*10*depth
