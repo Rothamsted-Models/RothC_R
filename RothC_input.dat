@@ -1,10 +1,13 @@
-example input data to run RothC for a number of years
-clay and depth are only needed once, other data are monthly jan-dec 
- (%)     (cm)  (t C/ha)      (-)
-clay	depth	    iom   nsteps
-13.0	25.0	 3.0041      840
+example input data to run the Farina verion of RothC for a number of years
+soil variables and nsteps (line 8) are only needed once, other data are monthly jan-dec 
+   (-)       (-)
+ opt_RMmoist  opt_SMDbare
+    1          1
+ (%)     (cm)  (t C/ha)      (-)      (%) (g/m3)     (%)   (-)
+clay	depth	    iom   nsteps  silt     BD      OC    minRM_Moist
+23.4	23.0	 3.0041      840    58.6      1.27  0.94   0.2
 (-)    (-)       (%)    (C)     (mm)    (mm)  (t C/ha) (t C/ha) (-)      (-) 
-year  month    modern	Tmp	Rain	Evap   C_inp	FYM	PC    DPM_RPM
+year  month    modern	Tmp	Rain	Evap   Pl_inp	OA_inp	PC    DPM_RPM
 1	1	100	3.73	52.2	6.6	0	0	1	1.44
 1	2	100	3.08	42.9	17.3	0	0	1	1.44
 1	3	100	5.49	35.2	40.7	0	0	1	1.44
