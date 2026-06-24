@@ -9,7 +9,7 @@ Roth C models the turnover of organic carbon in non-waterlogged top-soil.  It ac
 
 Requires small change to input files to accommodate the options and additional soil variables (silt (%), bulk density (g cm<sup>-3</sup>), organic carbon (%))
 
-## Development history
+## Model history
 
 The first version of RothC created by David Jenkinson and James Rayner in 1977 (Jenkinson and Rayner, 1977).
 
