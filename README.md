@@ -145,5 +145,5 @@ Giongo V, Coleman K, Santana MD, Salviano AM, Olszveski N, Silva DJ, et al. Opti
 Jenkinson DS. The Turnover of Organic-Carbon and Nitrogen in Soil. Philosophical Transactions of the Royal Society of London, Series B: Biological Sciences 1990; 329: 361-368.  
 Jenkinson DS, Hart PBS, Rayner JH, Parry LC. Modelling the turnover of organic matter in long-term experiments at Rothamsted. INTECOL Bulletin 1987; 15: 1-8.  
 Jenkinson DS, Rayner JH. Turnover of soil organic matter in some of the Rothamsted classical experiments. Soil Science 1977; 123: 298-305.  
-van Genuchten, M. T. (1980). A Closed-form Equation for Predicting the Hydraulic Conductivity of Unsaturated Soils. Soil Science Society of America Journal, 44(5), 892–898. https://doi.org/https://doi.org/10.2136/sssaj1980.03615995004400050002x
+van Genuchten, M. T. (1980). A Closed-form Equation for Predicting the Hydraulic Conductivity of Unsaturated Soils. Soil Science Society of America Journal, 44(5), 892–898. https://doi.org/https://doi.org/10.2136/sssaj1980.03615995004400050002x \
 Wösten, J. H. M., Lilly, A., Nemes, A., & Le Bas, C. (1999). Development and use of a database of hydraulic properties of European soils. Geoderma, 90(3), 169–185. https://doi.org/10.1016/S0016-7061(98)00132-3 
