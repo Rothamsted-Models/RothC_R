@@ -1,5 +1,8 @@
 # Revision History
 
+## Version 2.0.1
+This version fixes a minor bug in reading-in the soil variables (df_head). Column names were reset to ensure compatibility with the code, however this made the additional variables for opt_RMmoist = 2 or 3 required rather than optional (if only running opt_RMmoist = 1). This has been removed and the column names in the input file corrected.
+
 ## Version 2.0.0
 This version adds options to align with the Farina et al. (2013) which explored changing the effect of soil moisture for semi-arid soils.
 The model can be run as before (version 1.0) through specific options.
