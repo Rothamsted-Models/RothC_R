@@ -239,15 +239,14 @@ RothC_model <- function(filename){
   opt_RMmoist <- df_opts[[1,'opt_RMmoist']]
   opt_SMDbare <- df_opts[[1,'opt_SMDbare']]
   df_head <- read.csv(filename, skip = 6, header = 1, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
-  colnames(df_head) <- c('clay','depth','iom','nsteps','silt','BD','OC','min_RMmoist')
   clay <- df_head[[1,'clay']]
   depth <- df_head[[1,'depth']]
   IOM <- df_head[[1,'iom']]
   nsteps <- df_head[[1,'nsteps']]
   if(opt_RMmoist %in% c(2,3)){
     silt <- df_head[[1,'silt']]
-    OC <- df_head[[1,'OC']]
     BD <- df_head[[1,'BD']]
+    OC <- df_head[[1,'OC']]
     min_RMmoist <- df_head[[1,'min_RMmoist']]
   }
   df <- read.csv(filename, skip = 9, header = 1, sep = '')# sep = '' can be removed if file is comma delimited

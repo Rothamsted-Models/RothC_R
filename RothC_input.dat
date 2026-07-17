@@ -4,7 +4,7 @@ soil variables and nsteps (line 8) are only needed once, other data are monthly 
  opt_RMmoist  opt_SMDbare
     1          1
  (%)     (cm)  (t C/ha)      (-)      (%) (g/m3)     (%)   (-)
-clay	depth	    iom   nsteps  silt     BD      OC    minRM_Moist
+clay	depth	    iom   nsteps  silt     BD      OC    min_RMmoist
 23.4	23.0	 3.0041      840    58.6      1.27  0.94   0.2
 (-)    (-)       (%)    (C)     (mm)    (mm)  (t C/ha) (t C/ha) (-)      (-) 
 year  month    modern	Tmp	Rain	Evap   Pl_inp	OA_inp	PC    DPM_RPM
