@@ -46,8 +46,9 @@
 # Pl_inp:   carbon input from plants to the soil each month (units: t C /ha)
 # OA_inp:   organic amendment input to the soil each month; parameterised for Farmyard manure (units: t C /ha)
 # PC:       plant cover (0 = no cover, 1 = covered by a crop)
-# DPM/RPM:  ratio of DPM to RPM for carbon additions to the soil (units: none)
-# 
+# Pl_[DPM,RPM]_f:  decimal fraction of Pl_inp column to add to DPM or RPM pool (units: none)
+# OA_[DPM,RPM,Bio,Hum]_f: decimal fraction of OA_inp column to add to DPM, RPM, Bio, or Hum pool (units: none)
+#
 # OUTPUTS:
 # 
 # All pools are carbon and not organic matter
@@ -251,7 +252,7 @@ if(opt_RMmoist %in% c(2,3)){
   min_RMmoist <- df_head[[1,'min_RMmoist']]
 }
 df <- read.csv('RothC_input.dat', skip = 9, header = 1, sep = '')# sep = '' can be removed if file is comma delimited
-colnames(df) <- c('t_year', 't_month', 't_mod', 't_temp','t_rain','t_evap', 't_Pl_inp', 't_OA_inp', 't_PC', 't_DPM_RPM')
+colnames(df) <- c('t_year', 't_month', 't_mod', 't_temp','t_rain','t_evap', 't_Pl_inp', 't_OA_inp', 't_PC', 't_Pl_DPM_f', 't_Pl_RPM_f', 't_OA_DPM_f', 't_OA_RPM_f', 't_OA_Bio_f', 't_OA_Hum_f')
 
 # run RothC to equilibrium using first 12 months of input file df (spin-up)
 k <- 0
@@ -275,7 +276,12 @@ while(test > 0.000001){
   PEVAP <- df$t_evap[k]
   
   PC <- df$t_PC[k]
-  DPM_RPM <- df$t_DPM_RPM[k]
+  Pl_DPM_f <- df$t_Pl_DPM_f[k]
+  Pl_DPM_f <- df$t_Pl_DPM_f[k]
+  OA_DPM_f <- df$t_OA_DPM_f[k]
+  OA_RPM_f <- df$t_OA_RPM_f[k]
+  OA_Bio_f <- df$t_OA_Bio_f[k]
+  OA_Hum_f <- df$t_OA_Hum_f[k]
   
   Pl_inp <- df$t_Pl_inp[k]
   
@@ -349,19 +355,20 @@ while(test > 0.000001){
   Hum2 <- Hum1 + DPM_Hum + RPM_Hum + Bio_Hum + Hum_Hum
   
   # split plant C to DPM and RPM
-  Pl_C_DPM <- DPM_RPM / (DPM_RPM + 1.0) * Pl_inp
-  Pl_C_RPM <- 1.0 / (DPM_RPM + 1.0) * Pl_inp
+  Pl_C_DPM <- Pl_inp * Pl_DPM_f
+  Pl_C_RPM <- Pl_inp * Pl_RPM_f
   
-  # split OA C to DPM, RPM and Hum
-  OA_C_DPM <- 0.49*OA_inp
-  OA_C_RPM <- 0.49*OA_inp
-  OA_C_Hum <- 0.02*OA_inp
+  # split OA C to DPM, RPM, Bio and Hum
+  OA_C_DPM <- OA_inp * OA_DPM_f
+  OA_C_RPM <- OA_inp * OA_RPM_f
+  OA_C_Bio <- OA_inp * OA_Bio_f
+  OA_C_Hum <- OA_inp * OA_Hum_f
   
   # add Plant C and OA_C to DPM, RPM and Hum
   DPM <- DPM2 + Pl_C_DPM + OA_C_DPM
   RPM <- RPM2 + Pl_C_RPM + OA_C_RPM
+  Bio <- Bio2 + OA_C_Bio
   Hum <- Hum2 + OA_C_Hum
-  Bio <- Bio2
   
   SOC <- DPM + RPM + Bio + Hum + IOM
   
@@ -457,7 +464,12 @@ for(i in seq(timeFact+1, nsteps,1)){
   PEVAP <- df$t_evap[i]
   
   PC <- df$t_PC[i]
-  DPM_RPM <- df$t_DPM_RPM[i]
+  Pl_DPM_f <- df$t_Pl_DPM_f[i]
+  Pl_DPM_f <- df$t_Pl_DPM_f[i]
+  OA_DPM_f <- df$t_OA_DPM_f[i]
+  OA_RPM_f <- df$t_OA_RPM_f[i]
+  OA_Bio_f <- df$t_OA_Bio_f[i]
+  OA_Hum_f <- df$t_OA_Hum_f[i]
   
   Pl_inp <- df$t_Pl_inp[i]
   OA_inp <- df$t_OA_inp[i]
@@ -516,19 +528,20 @@ for(i in seq(timeFact+1, nsteps,1)){
   co2_tot <- co2_tot_i
   
   # split plant C to DPM and RPM
-  Pl_C_DPM <- DPM_RPM / (DPM_RPM + 1.0) * Pl_inp
-  Pl_C_RPM <- 1.0 / (DPM_RPM + 1.0) * Pl_inp
+  Pl_C_DPM <- Pl_inp * Pl_DPM_f
+  Pl_C_RPM <- Pl_inp * Pl_RPM_f
   
-  # split organic amendment C to DPM, RPM and Hum
-  OA_C_DPM <- 0.49*OA_inp
-  OA_C_RPM <- 0.49*OA_inp
-  OA_C_Hum <- 0.02*OA_inp
+  # split OA C to DPM, RPM, Bio and Hum
+  OA_C_DPM <- OA_inp * OA_DPM_f
+  OA_C_RPM <- OA_inp * OA_RPM_f
+  OA_C_Bio <- OA_inp * OA_Bio_f
+  OA_C_Hum <- OA_inp * OA_Hum_f
   
-  # add Plant C and organic amendment C to DPM, RPM and Hum
+  # add Plant C and OA_C to DPM, RPM and Hum
   DPM <- DPM2 + Pl_C_DPM + OA_C_DPM
   RPM <- RPM2 + Pl_C_RPM + OA_C_RPM
+  Bio <- Bio2 + OA_C_Bio
   Hum <- Hum2 + OA_C_Hum
-  Bio <- Bio2
   
   SOC <- DPM + RPM + Bio + Hum + IOM
   
