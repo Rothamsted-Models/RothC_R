@@ -5,9 +5,8 @@
 Roth C models the turnover of organic carbon in non-waterlogged top-soil.  It accounts for the effects of soil texture, temperature, moisture content and plant cover on the turnover process. It uses a monthly time step to calculate total organic carbon (t ha<sup>-1</sup>), microbial biomass carbon (t ha<sup>-1</sup>) and Δ<sup>14</sup>C (from which the equivalent radiocarbon age of the soil can be calculated). 
 
 ## This release
-**Version 2.0.0:** Adds options to moisture function to allow for dryland soils to be modelled as in (Farina, Coleman & Whitmore, 2013). Retains options for standard running.
-
-Requires small change to input files to accommodate the options and additional soil variables (silt (%), bulk density (g cm<sup>-3</sup>), organic carbon (%))
+**Version 2.1.0:** Changes how the model receives the composition of plant material and organic amendments. Previously through DPM/RPM ratio for plant material and given values within the model code for organic amendment.
+Now proportions of plant material going to DPM and RPM pools, and organic amendment going to DPM, RPM, Bio, and Hum pools can be provided more explicitly at each timestep. 
 
 ## Model history
 
@@ -54,7 +53,7 @@ Then values for **clay** (%), **soil depth** (cm), **inert organic matter** (IOM
 The **last four variables** are only read in when **opt_RMmoist is 2 or 3**.
 If **opt_RMmoist is 1** the value of **minRM_Moist** is taken as 0.2.
 
-Following that there is a table which records monthly data on **year**, **month**, **percentage of modern carbon**  (%), **mean air temperature** (Tmp, °C), **total monthly rainfall** (Rain, mm), **total monthly open-pan evaporation** (Evap, mm), **all carbon input entering the soil from plants** (e.g. shoots, roots, root exudates) (Pl_inp, t C ha<sup>-1</sup>), **carbon input from organic amendment** (OA_inp, t C ha<sup>-1</sup>), **plant cover** (PC, 0 for no plants e.g. bare or post-harvest, 1 for plants e.g. crop or grass), and the **DPM/RPM ratio** (DPM_RPM) of the carbon inputs from plants.
+Following that there is a table which records monthly data on **year**, **month**, **percentage of modern carbon**  (%), **mean air temperature** (Tmp, °C), **total monthly rainfall** (Rain, mm), **total monthly open-pan evaporation** (Evap, mm), **all carbon input entering the soil from plants** (e.g. shoots, roots, root exudates) (Pl_inp, t C ha<sup>-1</sup>), **carbon input from organic amendment** (OA_inp, t C ha<sup>-1</sup>), **plant cover** (PC, 0 for no plants e.g. bare or post-harvest, 1 for plants e.g. crop or grass), and the **allocations of plant material to DPM and RPM pools** (PL_DPM_f and PL_RPM_f; sum = 1), and **allocations of organic amendment to DPM, RPM, Bio, and Hum pools** (OA_DPM_f, OA_RPM_f, OA_Bio_f, and OA_Hum_f; sum = 1).
 
 
 ### year_results.out
