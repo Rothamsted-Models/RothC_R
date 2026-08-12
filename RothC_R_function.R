@@ -466,7 +466,7 @@ RothC_model <- function(filename){
     
     PC <- df$t_PC[i]
     Pl_DPM_f <- df$t_Pl_DPM_f[i]
-    Pl_DPM_f <- df$t_Pl_DPM_f[i]
+    Pl_RPM_f <- df$t_Pl_RPM_f[i]
     OA_DPM_f <- df$t_OA_DPM_f[i]
     OA_RPM_f <- df$t_OA_RPM_f[i]
     OA_Bio_f <- df$t_OA_Bio_f[i]
