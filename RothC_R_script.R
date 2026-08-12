@@ -1,4 +1,4 @@
-# RothC R version 2.0.0
+# RothC R version 2.1.0
 # 
 # Authors: Jonah Prout, Kevin Coleman, and Alice Milne
 #
@@ -27,12 +27,12 @@
 # 
 # clay:     clay content of the soil (units: %)
 # depth:    depth of topsoil (units: cm)
-# IOM:      inert organic matter (t C /ha)
+# IOM:      inert organic matter (units: t C /ha)
 # nsteps:   number of timesteps
 # 
 # Soil variables only required for opt_RMmoist = 2 or 3
 #
-# silt: silt content of the soil (units:%)
+# silt: silt content of the soil (units: %)
 # BD: bulk density (units: g cm^-3)
 # OC: soil organic carbon concentration (units: %)
 # min_RMmoist: minimum value to give to the rate modifying factor for moisture (0.2 in classic RothC)
