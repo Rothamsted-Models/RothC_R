@@ -1,5 +1,8 @@
 # Revision History
 
+## Version 2.1.1
+This version corrects a missed copy-paste error where assigning Pl_DPM_f was repeated and Pl_RPM_f was absent across the spin-up and scenario portions of the code. Only one was caught in previous release. 
+
 ## Version 2.1.0
 This version changes how the model receives the allocation of plant material and organic amendments to the active pools.
 The proportions of plant material going to DPM and RPM (PL_DPM_f and PL_RPM_f, respectively; sum = 1) are specified monthly.
