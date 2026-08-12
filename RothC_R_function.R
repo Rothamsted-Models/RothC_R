@@ -1,4 +1,4 @@
-# RothC R version 2.0.0
+# RothC R version 2.1.0
 # 
 # Authors: Jonah Prout, Kevin Coleman, and Alice Milne
 #
@@ -27,12 +27,12 @@
 # 
 # clay:     clay content of the soil (units: %)
 # depth:    depth of topsoil (units: cm)
-# IOM:      inert organic matter (t C /ha)
+# IOM:      inert organic matter (units: t C /ha)
 # nsteps:   number of timesteps
 # 
 # Soil variables only required for opt_RMmoist = 2 or 3
 #
-# silt: silt content of the soil (units:%)
+# silt: silt content of the soil (units: %)
 # BD: bulk density (units: g cm^-3)
 # OC: soil organic carbon concentration (units: %)
 # min_RMmoist: minimum value to give to the rate modifying factor for moisture (0.2 in classic RothC)
@@ -46,8 +46,9 @@
 # Pl_inp:   carbon input from plants to the soil each month (units: t C /ha)
 # OA_inp:   organic amendment input to the soil each month; parameterised for Farmyard manure (units: t C /ha)
 # PC:       plant cover (0 = no cover, 1 = covered by a crop)
-# DPM/RPM:  ratio of DPM to RPM for carbon additions to the soil (units: none)
-# 
+# Pl_[DPM,RPM]_f:  decimal fraction of Pl_inp column to add to DPM or RPM pool (units: none)
+# OA_[DPM,RPM,Bio,Hum]_f: decimal fraction of OA_inp column to add to DPM, RPM, Bio, or Hum pool (units: none)
+#
 # OUTPUTS:
 # 
 # All pools are carbon and not organic matter
@@ -72,6 +73,7 @@
 
 ###############################################################################
 
+
 # Model functions
 RothC_model <- function(filename){
   # Calculates the rate modifying factor for temperature (RMF_Temp)
@@ -85,7 +87,7 @@ RothC_model <- function(filename){
   
   # Calculates the rate modifying factor for moisture (RMF_Moist)
   # setting the additional variables for opt_RMmoist %in% c(2,3) to NULL
-  # if opt_RMmoist is 2 or 3, code will expect values for the NULL arguments
+  # if opt_RMmoist is 2 or 3, code will expect values from the input file for the NULL arguments
   RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, 
                         silt = NULL, OC = NULL, BulkD = NULL, min_RMmoist = NULL){
     RMFMax <- 1.0
@@ -130,7 +132,7 @@ RothC_model <- function(filename){
       thetaR <- 0.01
       
       m <- 1-1/n
-
+      
       wc <- list()
       
       for(i in 1:4){
@@ -235,10 +237,11 @@ RothC_model <- function(filename){
   TOC1 <- 0.0
   
   # read in RothC input data file 
-  df_opts <- read.csv(filename,skip = 3, header = 1, nrows = 1, sep = '')
+  # setwd()
+  df_opts <- read.csv('RothC_input.dat',skip = 3, header = 1, nrows = 1, sep = '')
   opt_RMmoist <- df_opts[[1,'opt_RMmoist']]
   opt_SMDbare <- df_opts[[1,'opt_SMDbare']]
-  df_head <- read.csv(filename, skip = 6, header = 1, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
+  df_head <- read.csv('RothC_input.dat', skip = 6, header = 1, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
   clay <- df_head[[1,'clay']]
   depth <- df_head[[1,'depth']]
   IOM <- df_head[[1,'iom']]
@@ -249,8 +252,8 @@ RothC_model <- function(filename){
     OC <- df_head[[1,'OC']]
     min_RMmoist <- df_head[[1,'min_RMmoist']]
   }
-  df <- read.csv(filename, skip = 9, header = 1, sep = '')# sep = '' can be removed if file is comma delimited
-  colnames(df) <- c('t_year', 't_month', 't_mod', 't_temp','t_rain','t_evap', 't_Pl_inp', 't_OA_inp', 't_PC', 't_DPM_RPM')
+  df <- read.csv('RothC_input.dat', skip = 9, header = 1, sep = '')# sep = '' can be removed if file is comma delimited
+  colnames(df) <- c('t_year', 't_month', 't_mod', 't_temp','t_rain','t_evap', 't_Pl_inp', 't_OA_inp', 't_PC', 't_Pl_DPM_f', 't_Pl_RPM_f', 't_OA_DPM_f', 't_OA_RPM_f', 't_OA_Bio_f', 't_OA_Hum_f')
   
   # run RothC to equilibrium using first 12 months of input file df (spin-up)
   k <- 0
@@ -274,7 +277,12 @@ RothC_model <- function(filename){
     PEVAP <- df$t_evap[k]
     
     PC <- df$t_PC[k]
-    DPM_RPM <- df$t_DPM_RPM[k]
+    Pl_DPM_f <- df$t_Pl_DPM_f[k]
+    Pl_RPM_f <- df$t_Pl_RPM_f[k]
+    OA_DPM_f <- df$t_OA_DPM_f[k]
+    OA_RPM_f <- df$t_OA_RPM_f[k]
+    OA_Bio_f <- df$t_OA_Bio_f[k]
+    OA_Hum_f <- df$t_OA_Hum_f[k]
     
     Pl_inp <- df$t_Pl_inp[k]
     
@@ -348,19 +356,20 @@ RothC_model <- function(filename){
     Hum2 <- Hum1 + DPM_Hum + RPM_Hum + Bio_Hum + Hum_Hum
     
     # split plant C to DPM and RPM
-    Pl_C_DPM <- DPM_RPM / (DPM_RPM + 1.0) * Pl_inp
-    Pl_C_RPM <- 1.0 / (DPM_RPM + 1.0) * Pl_inp
+    Pl_C_DPM <- Pl_inp * Pl_DPM_f
+    Pl_C_RPM <- Pl_inp * Pl_RPM_f
     
-    # split OA C to DPM, RPM and Hum
-    OA_C_DPM <- 0.49*OA_inp
-    OA_C_RPM <- 0.49*OA_inp
-    OA_C_Hum <- 0.02*OA_inp
+    # split OA C to DPM, RPM, Bio and Hum
+    OA_C_DPM <- OA_inp * OA_DPM_f
+    OA_C_RPM <- OA_inp * OA_RPM_f
+    OA_C_Bio <- OA_inp * OA_Bio_f
+    OA_C_Hum <- OA_inp * OA_Hum_f
     
     # add Plant C and OA_C to DPM, RPM and Hum
     DPM <- DPM2 + Pl_C_DPM + OA_C_DPM
     RPM <- RPM2 + Pl_C_RPM + OA_C_RPM
+    Bio <- Bio2 + OA_C_Bio
     Hum <- Hum2 + OA_C_Hum
-    Bio <- Bio2
     
     SOC <- DPM + RPM + Bio + Hum + IOM
     
@@ -456,7 +465,12 @@ RothC_model <- function(filename){
     PEVAP <- df$t_evap[i]
     
     PC <- df$t_PC[i]
-    DPM_RPM <- df$t_DPM_RPM[i]
+    Pl_DPM_f <- df$t_Pl_DPM_f[i]
+    Pl_DPM_f <- df$t_Pl_DPM_f[i]
+    OA_DPM_f <- df$t_OA_DPM_f[i]
+    OA_RPM_f <- df$t_OA_RPM_f[i]
+    OA_Bio_f <- df$t_OA_Bio_f[i]
+    OA_Hum_f <- df$t_OA_Hum_f[i]
     
     Pl_inp <- df$t_Pl_inp[i]
     OA_inp <- df$t_OA_inp[i]
@@ -515,19 +529,20 @@ RothC_model <- function(filename){
     co2_tot <- co2_tot_i
     
     # split plant C to DPM and RPM
-    Pl_C_DPM <- DPM_RPM / (DPM_RPM + 1.0) * Pl_inp
-    Pl_C_RPM <- 1.0 / (DPM_RPM + 1.0) * Pl_inp
+    Pl_C_DPM <- Pl_inp * Pl_DPM_f
+    Pl_C_RPM <- Pl_inp * Pl_RPM_f
     
-    # split organic amendment C to DPM, RPM and Hum
-    OA_C_DPM <- 0.49*OA_inp
-    OA_C_RPM <- 0.49*OA_inp
-    OA_C_Hum <- 0.02*OA_inp
+    # split OA C to DPM, RPM, Bio and Hum
+    OA_C_DPM <- OA_inp * OA_DPM_f
+    OA_C_RPM <- OA_inp * OA_RPM_f
+    OA_C_Bio <- OA_inp * OA_Bio_f
+    OA_C_Hum <- OA_inp * OA_Hum_f
     
-    # add Plant C and organic amendment C to DPM, RPM and Hum
+    # add Plant C and OA_C to DPM, RPM and Hum
     DPM <- DPM2 + Pl_C_DPM + OA_C_DPM
     RPM <- RPM2 + Pl_C_RPM + OA_C_RPM
+    Bio <- Bio2 + OA_C_Bio
     Hum <- Hum2 + OA_C_Hum
-    Bio <- Bio2
     
     SOC <- DPM + RPM + Bio + Hum + IOM
     
