@@ -1,4 +1,4 @@
-# RothC R version 2.1.0
+# RothC R version 2.1.1
 # 
 # Authors: Jonah Prout, Kevin Coleman, and Alice Milne
 #
