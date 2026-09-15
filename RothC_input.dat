@@ -1,13 +1,16 @@
 example input data to run the Farina verion of RothC for a number of years
 soil variables and nsteps (line 8) are only needed once, other data are monthly jan-dec 
-   (-)       (-)
- opt_RMmoist  opt_SMDbare
-    1          1
- (%)     (cm)  (t C/ha)      (-)      (%) (g/m3)     (%)   (-)
-clay	depth	    iom   nsteps  silt     BD      OC    min_RMmoist
-23.4	23.0	 3.0041      840    58.6      1.27  0.94   0.2
-(-)    (-)       (%)    (C)     (mm)    (mm)  (t C/ha) (t C/ha) (-)      (-)      (-)       (-)      (-)      (-)      (-) 
-year  month    modern	Tmp	Rain	Evap   Pl_inp	OA_inp	PC    Pl_DPM_f Pl_RPM_f OA_DPM_f OA_RPM_f OA_Bio_f OA_Hum_f
+   (-)       (-)           (-)        (-)
+opt_RMmoist  opt_SMDbare  opt_tstep  opt_init
+    1          1            1          1
+ (t C/ha) (t C/ha) (t C/ha) (t C/ha) (t C/ha) (years) (years) (years) (years) (years)
+IOM	DPM	RPM	Bio	Hum	IOM_age	DPM_age	RPM_age	Bio_age	Hum_age      
+3.0041	0	0	0	0	50000	0	0	0	0
+(%)	(cm)	(-)	(%)	(g/cm3)	(%)	(-)
+clay	depth   nsteps  silt     BD      OC    min_RMmoist
+23.4	23.0      840    58.6      1.27  0.94   0.2
+(-)	(-)	(%)	(C)	(mm)	(mm)	(t C/ha)	(t C/ha)	(-)	(-)	(-)	(-)	(-)	(-)	(-) 
+year	month	modern	Tmp	Rain	Evap	Pl_inp	OA_inp	PC	Pl_DPM_f	Pl_RPM_f	OA_DPM_f	OA_RPM_f	OA_Bio_f	OA_Hum_f
 1	1	100	3.73	52.2	6.6	0	0	1	0.5902	0.4098	0	0	0	0
 1	2	100	3.08	42.9	17.3	0	0	1	0.5902	0.4098	0	0	0	0
 1	3	100	5.49	35.2	40.7	0	0	1	0.5902	0.4098	0	0	0	0
