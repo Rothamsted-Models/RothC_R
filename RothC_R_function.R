@@ -1,4 +1,4 @@
-# RothC R version 2.1.1
+# RothC R version 2.1.2
 # 
 # Authors: Jonah Prout, Kevin Coleman, and Alice Milne
 #
@@ -238,10 +238,10 @@ RothC_model <- function(filename){
   
   # read in RothC input data file 
   # setwd()
-  df_opts <- read.csv('RothC_input.dat',skip = 3, header = 1, nrows = 1, sep = '')
+  df_opts <- read.csv(filename,skip = 3, header = 1, nrows = 1, sep = '')
   opt_RMmoist <- df_opts[[1,'opt_RMmoist']]
   opt_SMDbare <- df_opts[[1,'opt_SMDbare']]
-  df_head <- read.csv('RothC_input.dat', skip = 6, header = 1, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
+  df_head <- read.csv(filename, skip = 6, header = 1, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
   clay <- df_head[[1,'clay']]
   depth <- df_head[[1,'depth']]
   IOM <- df_head[[1,'iom']]
@@ -252,7 +252,7 @@ RothC_model <- function(filename){
     OC <- df_head[[1,'OC']]
     min_RMmoist <- df_head[[1,'min_RMmoist']]
   }
-  df <- read.csv('RothC_input.dat', skip = 9, header = 1, sep = '')# sep = '' can be removed if file is comma delimited
+  df <- read.csv(filename, skip = 9, header = 1, sep = '')# sep = '' can be removed if file is comma delimited
   colnames(df) <- c('t_year', 't_month', 't_mod', 't_temp','t_rain','t_evap', 't_Pl_inp', 't_OA_inp', 't_PC', 't_Pl_DPM_f', 't_Pl_RPM_f', 't_OA_DPM_f', 't_OA_RPM_f', 't_OA_Bio_f', 't_OA_Hum_f')
   
   # run RothC to equilibrium using first 12 months of input file df (spin-up)

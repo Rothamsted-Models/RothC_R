@@ -1,5 +1,8 @@
 # Revision History
 
+## Version 2.1.2
+This version corrects the RothC_R_function.R script in which the 'RothC_input.dat' filenames had not been replaced with the filename argument from the function.
+
 ## Version 2.1.1
 This version corrects a missed copy-paste error where assigning Pl_DPM_f was repeated and Pl_RPM_f was absent across the spin-up and scenario portions of the code. Only one was caught in previous release. 
 

@@ -5,7 +5,7 @@
 Roth C models the turnover of organic carbon in non-waterlogged top-soil.  It accounts for the effects of soil texture, temperature, moisture content and plant cover on the turnover process. It uses a monthly time step to calculate total organic carbon (t ha<sup>-1</sup>), microbial biomass carbon (t ha<sup>-1</sup>) and Δ<sup>14</sup>C (from which the equivalent radiocarbon age of the soil can be calculated). 
 
 ## This release
-**Version 2.1.1:** This version corrects a missed copy-paste error where assigning Pl_DPM_f was repeated and Pl_RPM_f was absent across the spin-up and scenario portions of the code. Only one was caught in previous release.
+**Version 2.1.2:** This version corrects the RothC_R_function.R script in which the 'RothC_input.dat' filenames had not been replaced with the filename argument from the function.
 
 ## Model history
 
