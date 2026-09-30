@@ -83,81 +83,97 @@ RMF_Temp <- function(TEMP){
   return(RM_Temp)
 }
 
+# VG_params is used within RMF_Moist if opt_RMmoist %in% c(2,3)
+
+VG_params <- function(clay, depth, silt, OC, BD, min_RMmoist){
+  
+  mbars <- c(50, 1000, 15000, 1000000)
+  
+  t <- 1  # note t = topsoil, in Wosten et al 1999, topsoil and subsoil have values 1 or 0
+          # RothC only models topsoils so t is always 1
+  
+  alpha <- exp(
+    -14.96 + 0.03135 * clay + 0.0351 * silt + 0.646 * (OC * 1.72) + 15.29 * BD - 0.192 * t - 4.671 * BD^2 -
+      0.000781 * clay^2 - 0.00687 * (OC * 1.72)^2 + 0.0449 * (OC * 1.72)^-1 + 0.0663 * log(silt) +
+      0.1482 * log(OC * 1.72) - 0.04546 * BD * silt - 0.4852 * BD * (OC * 1.72) + 0.00673 * clay * t
+  )
+  
+  thetaS <- (
+    0.7919 + 0.001691 * clay - 0.29619 * BD - 0.000001491 * silt^2 + 0.0000821 * (OC * 1.72)^2 +
+      0.02427 * clay^-1 + 0.01113 * silt^-1 + 0.01472 * log(silt) - 0.0000733 * (OC * 1.72) * clay -
+      0.000619 * BD * clay - 0.001183 * BD * (OC * 1.72) - 0.0001664 * silt * t
+  )
+  
+  n <- exp(
+    -25.23 - 0.02195 * clay + 0.0074 * silt - 0.194 * (OC * 1.72) + 45.5 * BD - 7.24 * BD^2 + 0.0003658 * clay^2 +
+      0.002885 * (OC * 1.72)^2 - 12.81 * BD^-1 - 0.1524 * silt^-1 - 0.01958 * (OC * 1.72)^-1 - 0.2876 * log(silt) -
+      0.0709 * log(OC * 1.72) - 44.6 * log(BD) - 0.02264 * BD * clay + 0.0896 * BD * (OC * 1.72) + 0.00718 * clay * t
+  ) + 1
+  
+  thetaR <- 0.01
+  m <- 1 - 1 / n
+  
+  wc <- sapply(
+    mbars,
+    function(mbar){
+      thetaR + (thetaS - thetaR) /
+      (1 + (alpha * mbar)^n)^m
+    }
+  )
+  
+  wcFC <- wc[1]
+  wc1 <- wc[2]
+  wcWP <- wc[3]
+  wc1000 <- wc[4]
+  
+  list(
+    RMFMin = min_RMmoist,
+    SMD15barAdj = (wcWP - wcFC) * 10 * depth,
+    SMD1bar = (wc1 - wcFC) * 10 * depth,
+    SMD1000bar = (wc1000 - wcFC) * 10 * depth
+  )
+}
+
 # Calculates the rate modifying factor for moisture (RMF_Moist)
 # setting the additional variables for opt_RMmoist %in% c(2,3) to NULL
 # if opt_RMmoist is 2 or 3, code will expect values from the input file for the NULL arguments
+
 RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, 
                       silt = NULL, OC = NULL, BD = NULL, min_RMmoist = NULL){
   RMFMax <- 1.0
+  
   if(opt_RMmoist == 1){
-    
+    # Classic RothC parameters
     RMFMin <- 0.2
     
-    # Calc soil water functions properties
     SMD15bar <- -(20+1.3*clay-0.01*(clay*clay))
     SMD15barAdj <- SMD15bar*depth/23.0
     SMD1bar <- 0.444*SMD15barAdj
     
+    SMDbare <- 0.556 * SMD15barAdj
+    
   } else if(opt_RMmoist %in% c(2,3)){
+    # Calculates soil moisture parameters using van Genuchten/Wosten equations
+    vg <- VG_params(
+      clay = clay,
+      depth = depth,
+      silt = silt,
+      OC = OC,
+      BD = BD,
+      min_RMmoist = min_RMmoist
+    )
     
-    RMFMin <- min_RMmoist
+    RMFMin <- vg$RMFMin
+    SMD15barAdj <- vg$SMD15barAdj
+    SMD1bar <- vg$SMD1bar
+    SMD1000bar <- vg$SMD1000bar
     
-    mbars <- c(50, 1000, 15000, 1000000)
+    SMDbare <- SMD15barAdj - (0.6388/0.8) * (SMD15barAdj - SMD1bar)
     
-    t <- 1 # note t = topsoil, in Wosten et al 1999, topsoil and subsoil have values 1 or 0
-    # RothC only models topsoils so t is always 1
-    
-    alpha <- exp(-14.96+0.03135*clay+0.0351*silt+0.646*(OC*1.72)
-                 +15.29*BD-0.192*t-4.671*BD^2-0.000781*clay^2
-                 -0.00687*(OC*1.72)^2
-                 +0.0449*(OC*1.72)^-1+0.0663*log(silt)
-                 +0.1482*log(OC*1.72)
-                 -0.04546*BD*silt-0.4852*BD*(OC*1.72)+0.00673*clay*t)
-    
-    thetaS <- (0.7919+0.001691*clay-0.29619*BD-0.000001491*silt^2
-               +0.0000821*(OC*1.72)^2+0.02427*clay^-1
-               +0.01113*silt^-1+0.01472*log(silt)
-               -0.0000733*(OC*1.72)*clay-0.000619*BD*clay
-               -0.001183*BD*(OC*1.72)-0.0001664*silt*t)
-    
-    n <- exp(-25.23 -0.02195*clay +0.0074*silt -0.194*(OC*1.72)
-             +45.5*BD-7.24*BD^2 +0.0003658*clay^2
-             +0.002885*(OC*1.72)^2 -12.81*BD^-1 -0.1524*silt^-1
-             -0.01958*(OC*1.72)^-1 -0.2876*log(silt)
-             -0.0709*log(OC*1.72) -44.6*log(BD) -0.02264*BD*clay
-             +0.0896*BD*(OC*1.72) +0.00718*clay*t)+1
-    
-    thetaR <- 0.01
-    
-    m <- 1-1/n
-    
-    wc <- list()
-    
-    for(i in 1:4){
-      wc[[i]] <- thetaR + (thetaS-thetaR)/ (1+(alpha*mbars[i])^n)^m
-    }
-    
-    wcFC <- wc[[1]]
-    wc1 <- wc[[2]]
-    wcWP <- wc[[3]]
-    wc1000 <- wc[[4]]
-    
-    X1 <- (wc1 - wcFC)*10*depth
-    X2 <- (wcWP - wcFC)*10*depth
-    X3 <- (wc1000 - wcFC)*10*depth
-    
-    SMD15bar <- X2 # X2 has been adjusted for depth
-    SMD15barAdj <- SMD15bar
-    SMD1bar <- X1
-    SMD1000bar <- X3
   }
   
   if(opt_SMDbare == 1){
-    if(opt_RMmoist == 1){
-      SMDbare <- 0.556 * SMD15barAdj
-    } else {
-      SMDbare <- SMD15barAdj - (0.6388/0.8) * (SMD15barAdj - SMD1bar)
-    }
+    SMDbare <- SMDbare
   } else {
     SMDbare <- SMD15barAdj
   }
