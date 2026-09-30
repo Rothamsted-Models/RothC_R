@@ -60,12 +60,10 @@
 # IOM:   Inert Organic Matter        (units: t C /ha)
 # SOC:   Soil Organic Matter / Total organic Matter (units: t C / ha)
 # 
-# DPM_Rage:   radiocarbon age of DPM
-# RPM_Rage:   radiocarbon age of RPM
-# Bio_Rage:   radiocarbon age of Bio
-# Hum_Rage:   radiocarbon age of Hum
-# Total_Rage: radiocarbon age of SOC (or TOC)
-# 
+# deltaC: modelled delta 14C (per mille) of total SOC, derived from the radiocarbon age of the combined soil carbon pools. 
+#
+# The monthly output includes the plant and organic amendment inputs, and rate modifying factors (including the weather variables).
+#
 # SMD:       soil moisture deficit (mm per soil depth)
 # RM_Temp:   rate modifying factor for temperature (0.0 - ~5.0)
 # RM_Moist:  rate modifying factor for moisture (0.0 - 1.0)
