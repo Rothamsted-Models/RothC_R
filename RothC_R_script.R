@@ -244,7 +244,7 @@ opt_SMDbare <- df_opts[[1,'opt_SMDbare']]
 df_head <- read.csv('RothC_input.dat', skip = 6, header = TRUE, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
 clay <- df_head[[1,'clay']]
 depth <- df_head[[1,'depth']]
-IOM <- df_head[[1,'iom']]
+IOM <- df_head[[1,'IOM']]
 nsteps <- df_head[[1,'nsteps']]
 if(opt_RMmoist %in% c(2,3)){
   silt <- df_head[[1,'silt']]
@@ -265,6 +265,8 @@ timeFact <- 12
 
 tol <- 1e-6 # spin-up tolerance
 max_iter <- 10000*timeFact # maximum number of iterations for spin-up
+
+test <- 100.0
 
 while(test > tol && j < max_iter){
   k <- k + 1
@@ -453,6 +455,8 @@ while(test > tol && j < max_iter){
     test <- abs(TOC1-TOC0)
   }
 }
+
+spinup_warning <- NULL
 
 if(test > tol){
   spinup_warning <- sprintf(
