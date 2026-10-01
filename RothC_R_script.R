@@ -12,7 +12,7 @@
 # Users can adapt the code to source the inputs from the R environment or use input files of the same structure.
 #
 # The structure of the input file matches the corresponding version in our other releases (Fortran and Python).
-# As such the input is expected to not be comma delimited (i.e. tab or space), but this can be edited if needed
+# As such the input is expected to not be comma delimited (i.e. tab or space), but this can be edited if needed.
 #
 # INPUTS:
 # 
@@ -279,7 +279,7 @@ SOC <- DPM + RPM + Bio + Hum + IOM
 timeFact <- 12
 
 tol <- 1e-6 # spin-up tolerance
-max_iter <- 10000*timeFact # maximum number of iterations for spin-up
+max_iter <- 20000*timeFact # maximum number of iterations for spin-up
 
 test <- 100.0
 
