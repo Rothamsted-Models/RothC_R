@@ -1,5 +1,12 @@
 # Revision History
 
+## Version 2.1.3
+This version corrects variables named BulkD to BD. 
+Restructures code to tidy the moisture function calculations and achieve the same results without the global assignment of SMD.
+Adds explicit return statements to the rate modifying factors.
+Adds a maximum iteration of the spin-up corresponding to 20000 years to avoid infinite non-convergence (which is unlikely but now covered).
+Changes iom to IOM in the input file as this is the only instance of lower case for this.
+
 ## Version 2.1.2
 This version corrects the RothC_R_function.R script in which the 'RothC_input.dat' filenames had not been replaced with the filename argument from the function.
 
