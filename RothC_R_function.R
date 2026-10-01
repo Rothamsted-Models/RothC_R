@@ -1,8 +1,8 @@
-# RothC R version 2.1.2
+# RothC R version 2.1.3
 # 
 # Authors: Jonah Prout, Kevin Coleman, and Alice Milne
 #
-# Written in R version 4.2.3 (2023-03-15 ucrt)
+# Written in R version 4.6.0 (2026-04-24 ucrt)
 #
 # The Rothamsted Carbon Model: RothC
 # Developed by David Jenkinson and Kevin Coleman
@@ -83,83 +83,100 @@ RothC_model <- function(filename){
     } else {
       RM_Temp <- 47.91 / (exp(106.06/(TEMP+18.27)) + 1.0)
     }
+    return(RM_Temp)
+  }
+  
+  # VG_params is used within RMF_Moist if opt_RMmoist %in% c(2,3)
+  
+  VG_params <- function(clay, depth, silt, OC, BD, min_RMmoist){
+    
+    mbars <- c(50, 1000, 15000, 1000000)
+    
+    t <- 1  # note t = topsoil, in Wosten et al 1999, topsoil and subsoil have values 1 or 0
+    # RothC only models topsoils so t is always 1
+    
+    alpha <- exp(
+      -14.96 + 0.03135 * clay + 0.0351 * silt + 0.646 * (OC * 1.72) + 15.29 * BD - 0.192 * t - 4.671 * BD^2 -
+        0.000781 * clay^2 - 0.00687 * (OC * 1.72)^2 + 0.0449 * (OC * 1.72)^-1 + 0.0663 * log(silt) +
+        0.1482 * log(OC * 1.72) - 0.04546 * BD * silt - 0.4852 * BD * (OC * 1.72) + 0.00673 * clay * t
+    )
+    
+    thetaS <- (
+      0.7919 + 0.001691 * clay - 0.29619 * BD - 0.000001491 * silt^2 + 0.0000821 * (OC * 1.72)^2 +
+        0.02427 * clay^-1 + 0.01113 * silt^-1 + 0.01472 * log(silt) - 0.0000733 * (OC * 1.72) * clay -
+        0.000619 * BD * clay - 0.001183 * BD * (OC * 1.72) - 0.0001664 * silt * t
+    )
+    
+    n <- exp(
+      -25.23 - 0.02195 * clay + 0.0074 * silt - 0.194 * (OC * 1.72) + 45.5 * BD - 7.24 * BD^2 + 0.0003658 * clay^2 +
+        0.002885 * (OC * 1.72)^2 - 12.81 * BD^-1 - 0.1524 * silt^-1 - 0.01958 * (OC * 1.72)^-1 - 0.2876 * log(silt) -
+        0.0709 * log(OC * 1.72) - 44.6 * log(BD) - 0.02264 * BD * clay + 0.0896 * BD * (OC * 1.72) + 0.00718 * clay * t
+    ) + 1
+    
+    thetaR <- 0.01
+    m <- 1 - 1 / n
+    
+    wc <- sapply(
+      mbars,
+      function(mbar){
+        thetaR + (thetaS - thetaR) /
+          (1 + (alpha * mbar)^n)^m
+      }
+    )
+    
+    wcFC <- wc[1]
+    wc1 <- wc[2]
+    wcWP <- wc[3]
+    wc1000 <- wc[4]
+    
+    list(
+      RMFMin = min_RMmoist,
+      SMD15barAdj = (wcWP - wcFC) * 10 * depth,
+      SMD1bar = (wc1 - wcFC) * 10 * depth,
+      SMD1000bar = (wc1000 - wcFC) * 10 * depth
+    )
   }
   
   # Calculates the rate modifying factor for moisture (RMF_Moist)
   # setting the additional variables for opt_RMmoist %in% c(2,3) to NULL
   # if opt_RMmoist is 2 or 3, code will expect values from the input file for the NULL arguments
+  
   RMF_Moist <- function(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, 
-                        silt = NULL, OC = NULL, BulkD = NULL, min_RMmoist = NULL){
+                        silt = NULL, OC = NULL, BD = NULL, min_RMmoist = NULL){
     RMFMax <- 1.0
+    
     if(opt_RMmoist == 1){
-      
+      # Classic RothC parameters
       RMFMin <- 0.2
       
-      # Calc soil water functions properties
       SMD15bar <- -(20+1.3*clay-0.01*(clay*clay))
       SMD15barAdj <- SMD15bar*depth/23.0
       SMD1bar <- 0.444*SMD15barAdj
       
+      SMDbare <- 0.556 * SMD15barAdj
+      
     } else if(opt_RMmoist %in% c(2,3)){
+      # Calculates soil moisture parameters using van Genuchten/Wosten equations
+      vg <- VG_params(
+        clay = clay,
+        depth = depth,
+        silt = silt,
+        OC = OC,
+        BD = BD,
+        min_RMmoist = min_RMmoist
+      )
       
-      RMFMin <- min_RMmoist
+      RMFMin <- vg$RMFMin
+      SMD15barAdj <- vg$SMD15barAdj
+      SMD1bar <- vg$SMD1bar
+      SMD1000bar <- vg$SMD1000bar
       
-      mbars <- c(50, 1000, 15000, 1000000)
+      SMDbare <- SMD15barAdj - (0.6388/0.8) * (SMD15barAdj - SMD1bar)
       
-      t <- 1 # note t = topsoil, in Wosten et al 1999, topsoil and subsoil have values 1 or 0
-      # RothC only models topsoils so t is always 1
-      
-      alpha <- exp(-14.96+0.03135*clay+0.0351*silt+0.646*(OC*1.72)
-                   +15.29*BD-0.192*t-4.671*BD^2-0.000781*clay^2
-                   -0.00687*(OC*1.72)^2
-                   +0.0449*(OC*1.72)^-1+0.0663*log(silt)
-                   +0.1482*log(OC*1.72)
-                   -0.04546*BD*silt-0.4852*BD*(OC*1.72)+0.00673*clay*t)
-      
-      thetaS <- (0.7919+0.001691*clay-0.29619*BD-0.000001491*silt^2
-                 +0.0000821*(OC*1.72)^2+0.02427*clay^-1
-                 +0.01113*silt^-1+0.01472*log(silt)
-                 -0.0000733*(OC*1.72)*clay-0.000619*BD*clay
-                 -0.001183*BD*(OC*1.72)-0.0001664*silt*t)
-      
-      n <- exp(-25.23 -0.02195*clay +0.0074*silt -0.194*(OC*1.72)
-               +45.5*BD-7.24*BD^2 +0.0003658*clay^2
-               +0.002885*(OC*1.72)^2 -12.81*BD^-1 -0.1524*silt^-1
-               -0.01958*(OC*1.72)^-1 -0.2876*log(silt)
-               -0.0709*log(OC*1.72) -44.6*log(BD) -0.02264*BD*clay
-               +0.0896*BD*(OC*1.72) +0.00718*clay*t)+1
-      
-      thetaR <- 0.01
-      
-      m <- 1-1/n
-      
-      wc <- list()
-      
-      for(i in 1:4){
-        wc[[i]] <- thetaR + (thetaS-thetaR)/ (1+(alpha*mbars[i])^n)^m
-      }
-      
-      wcFC <- wc[[1]]
-      wc1 <- wc[[2]]
-      wcWP <- wc[[3]]
-      wc1000 <- wc[[4]]
-      
-      X1 <- (wc1 - wcFC)*10*depth
-      X2 <- (wcWP - wcFC)*10*depth
-      X3 <- (wc1000 - wcFC)*10*depth
-      
-      SMD15bar <- X2 # X2 has been adjusted for depth
-      SMD15barAdj <- SMD15bar
-      SMD1bar <- X1
-      SMD1000bar <- X3
     }
     
     if(opt_SMDbare == 1){
-      if(opt_RMmoist == 1){
-        SMDbare <- 0.556 * SMD15barAdj
-      } else {
-        SMDbare <- SMD15barAdj - (0.6388/0.8) * (SMD15barAdj - SMD1bar)
-      }
+      SMDbare <- SMDbare
     } else {
       SMDbare <- SMD15barAdj
     }
@@ -181,8 +198,6 @@ RothC_model <- function(filename){
       SMD1 <- max(minSMDbareSMD,minSMDDF)
     }
     
-    SMD <<- SMD1 # global assign required here for expected behaviour of the model.
-    
     if(opt_RMmoist %in% c(1,3)){
       
       if(SMD1 > SMD1bar){
@@ -203,6 +218,8 @@ RothC_model <- function(filename){
       
     }
     
+    return(list(RM_Moist = RM_Moist,
+                SMD = SMD1))
   }
   
   # Calculates the plant retainment modifying factor (RMF_PC)
@@ -212,7 +229,7 @@ RothC_model <- function(filename){
     } else {
       RM_PC <- 0.6 
     }
-    
+    return(RM_PC)
   }
   
   ###############################################################################
@@ -238,13 +255,13 @@ RothC_model <- function(filename){
   
   # read in RothC input data file 
   # setwd()
-  df_opts <- read.csv(filename,skip = 3, header = 1, nrows = 1, sep = '')
+  df_opts <- read.csv(filename,skip = 3, header = TRUE, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
   opt_RMmoist <- df_opts[[1,'opt_RMmoist']]
   opt_SMDbare <- df_opts[[1,'opt_SMDbare']]
-  df_head <- read.csv(filename, skip = 6, header = 1, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
+  df_head <- read.csv(filename, skip = 6, header = TRUE, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
   clay <- df_head[[1,'clay']]
   depth <- df_head[[1,'depth']]
-  IOM <- df_head[[1,'iom']]
+  IOM <- df_head[[1,'IOM']]
   nsteps <- df_head[[1,'nsteps']]
   if(opt_RMmoist %in% c(2,3)){
     silt <- df_head[[1,'silt']]
@@ -252,7 +269,7 @@ RothC_model <- function(filename){
     OC <- df_head[[1,'OC']]
     min_RMmoist <- df_head[[1,'min_RMmoist']]
   }
-  df <- read.csv(filename, skip = 9, header = 1, sep = '')# sep = '' can be removed if file is comma delimited
+  df <- read.csv(filename, skip = 9, header = TRUE, sep = '')# sep = '' can be removed if file is comma delimited
   colnames(df) <- c('t_year', 't_month', 't_mod', 't_temp','t_rain','t_evap', 't_Pl_inp', 't_OA_inp', 't_PC', 't_Pl_DPM_f', 't_Pl_RPM_f', 't_OA_DPM_f', 't_OA_RPM_f', 't_OA_Bio_f', 't_OA_Hum_f')
   
   # run RothC to equilibrium using first 12 months of input file df (spin-up)
@@ -263,8 +280,12 @@ RothC_model <- function(filename){
   
   timeFact <- 12
   
-  test = 100.0
-  while(test > 0.000001){
+  tol <- 1e-6 # spin-up tolerance
+  max_iter <- 20000*timeFact # maximum number of iterations for spin-up
+  
+  test <- 100.0
+  
+  while(test > tol && j < max_iter){
     k <- k + 1
     j <- j + 1
     
@@ -294,11 +315,16 @@ RothC_model <- function(filename){
     
     # calculate RMFs for temperature, moisture, and plant cover
     RM_Temp <- RMF_Temp(TEMP)
-    if(opt_RMmoist == 1){
-      RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare)
+    
+    moist_out <- if(opt_RMmoist == 1){
+      RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare) 
     } else if(opt_RMmoist %in% c(2,3)){
-      RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, silt, OC, BulkD, min_RMmoist)
+      RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, silt, OC, BD, min_RMmoist)
     }
+    
+    RM_Moist <- moist_out$RM_Moist
+    SMD <- moist_out$SMD
+    
     RM_PC <- RMF_PC(PC)
     
     # combine RMFs into one.
@@ -447,6 +473,17 @@ RothC_model <- function(filename){
     }
   }
   
+  spinup_warning <- NULL
+  
+  if(test > tol){
+    spinup_warning <- sprintf(
+      "WARNING: Spin-up did not reach convergence threshold of %.1e after %d iterations. Final difference = %.3e.",
+      tol, j, test
+    )
+    
+  }
+  
+  
   Total_Delta <- (exp(-Total_Rage/8035.0) - 1.0) * 1000.0
   
   co2_tot <- 0
@@ -479,11 +516,17 @@ RothC_model <- function(filename){
     
     # Calculate RMFs
     RM_Temp <- RMF_Temp(TEMP)
-    if(opt_RMmoist == 1){
-      RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare)
+    
+    moist_out <- if(opt_RMmoist == 1){
+      RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare) 
     } else if(opt_RMmoist %in% c(2,3)){
-      RM_Moist <- RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, silt, OC, BulkD, min_RMmoist)
+      RMF_Moist(RAIN, PEVAP, clay, depth, PC, SMD, opt_RMmoist, opt_SMDbare, silt, OC, BD, min_RMmoist)
     }
+    
+    RM_Moist <- moist_out$RM_Moist
+    SMD <- moist_out$SMD
+    
+    
     RM_PC <- RMF_PC(PC)
     
     # Combine RMFs into one.
@@ -616,12 +659,12 @@ RothC_model <- function(filename){
     
     # appending outputs to a list
     month_list[[i-timeFact]] <- data.frame(df[[i, 't_year']], df[[i,'t_month']],Pl_inp, OA_inp, TEMP, RM_Temp, RAIN, PEVAP, SMD, RM_Moist, PC, RM_PC, DPM, RPM, Bio, Hum, IOM, SOC, co2_tot)
-    colnames(month_list[[i-timeFact]]) = c('Year','Month','Pl_inp_t_C_ha','OA_inp_t_C_ha','TEMP_C','RM_Temp','RAIN_mm','PEVAP_mm','SMD_mm','RM_Moist','PC','RM_PC','DPM_t_C_ha','RPM_t_C_ha','Bio_t_C_ha','Hum_t_C_ha','IOM_t_C_ha','SOC_t_C_ha',"CO2_t_C_ha")
+    colnames(month_list[[i-timeFact]]) <- c('Year','Month','Pl_inp_t_C_ha','OA_inp_t_C_ha','TEMP_C','RM_Temp','RAIN_mm','PEVAP_mm','SMD_mm','RM_Moist','PC','RM_PC','DPM_t_C_ha','RPM_t_C_ha','Bio_t_C_ha','Hum_t_C_ha','IOM_t_C_ha','SOC_t_C_ha',"CO2_t_C_ha")
     # appending outputs to end of year_list when loop i equals timeFact
     if(df$t_month[i] == timeFact){
       timeFact_index <- as.integer(i/timeFact)
       year_list[[timeFact_index]] <- data.frame(df[i,'t_year'], df[i,'t_month'],DPM, RPM, Bio, Hum, IOM, SOC, co2_tot, Total_Delta)
-      colnames(year_list[[timeFact_index]]) = c('Year','Month','DPM_t_C_ha','RPM_t_C_ha','Bio_t_C_ha','Hum_t_C_ha','IOM_t_C_ha','SOC_t_C_ha',"CO2_t_C_ha",'deltaC')
+      colnames(year_list[[timeFact_index]]) <- c('Year','Month','DPM_t_C_ha','RPM_t_C_ha','Bio_t_C_ha','Hum_t_C_ha','IOM_t_C_ha','SOC_t_C_ha',"CO2_t_C_ha",'deltaC')
       print(paste(i, DPM, RPM, Bio, Hum, IOM, SOC, Total_Delta))
     }
     
@@ -638,4 +681,14 @@ RothC_model <- function(filename){
   write.csv(output_months,
             'month_results.csv',
             row.names = FALSE)
+  
+  if(!is.null(spinup_warning)){
+    cat("\n")
+    cat(strrep("=",80),"\n")
+    cat(spinup_warning, "\n")
+    cat("Model outputs were generated using the final spin-up state.\n")
+    cat(strrep("=", 80), "\n")
+  }
+  
+  
 }
