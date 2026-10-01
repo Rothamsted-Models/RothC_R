@@ -12,6 +12,7 @@
 # Users can adapt the code to source the inputs from the R environment or use input files of the same structure.
 #
 # The structure of the input file matches the corresponding version in our other releases (Fortran and Python).
+# As such the input is expected to not be comma delimited (i.e. tab or space), but this can be edited if needed
 #
 # INPUTS:
 # 
@@ -252,7 +253,7 @@ TOC1 <- 0.0
 
 # read in RothC input data file 
 # setwd()
-df_opts <- read.csv('RothC_input.dat',skip = 3, header = TRUE, nrows = 1, sep = '')
+df_opts <- read.csv('RothC_input.dat',skip = 3, header = TRUE, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
 opt_RMmoist <- df_opts[[1,'opt_RMmoist']]
 opt_SMDbare <- df_opts[[1,'opt_SMDbare']]
 df_head <- read.csv('RothC_input.dat', skip = 6, header = TRUE, nrows = 1, sep = '')# sep = '' can be removed if file is comma delimited
